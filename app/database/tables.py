@@ -1,0 +1,29 @@
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS products (
+ sku TEXT PRIMARY KEY, name TEXT NOT NULL, barcode TEXT UNIQUE,
+ reorder_level INTEGER NOT NULL DEFAULT 0, unit_cost REAL NOT NULL DEFAULT 0,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS batches (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, sku TEXT NOT NULL REFERENCES products(sku),
+ batch_code TEXT NOT NULL, expiry_date TEXT NOT NULL, quantity INTEGER NOT NULL CHECK(quantity >= 0),
+ location TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ UNIQUE(sku, batch_code)
+);
+CREATE TABLE IF NOT EXISTS movements (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, sku TEXT NOT NULL, batch_code TEXT NOT NULL,
+ quantity INTEGER NOT NULL, movement_type TEXT NOT NULL, reference TEXT,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS sales_history (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, sku TEXT NOT NULL, sale_date TEXT NOT NULL,
+ quantity INTEGER NOT NULL CHECK(quantity >= 0)
+);
+CREATE TABLE IF NOT EXISTS users (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE,
+ password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'operator',
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_batches_fefo ON batches(sku, expiry_date, quantity);
+CREATE INDEX IF NOT EXISTS idx_sales_sku_date ON sales_history(sku, sale_date);
+"""
